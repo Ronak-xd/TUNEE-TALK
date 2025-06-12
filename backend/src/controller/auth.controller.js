@@ -2,16 +2,22 @@ import { User } from "../models/user.model.js";
 
 export const authCallback = async (req, res, next) => {
 	try {
-		const { id, firstName, lastName, imageUrl } = req.body;
+		const { id, firstName, lastName, imageUrl, emailAddress } = req.body;
+
+		let fullName = `${firstName || ""} ${lastName || ""}`.trim();
+
+		// fallback if name is missing (like in email-only signup)
+		if (!fullName) {
+			fullName = emailAddress?.split("@")[0] || "Unknown User";
+		}
 
 		// check if user already exists
-		const user = await User.findOne({ clerkId: id });
+		const existingUser = await User.findOne({ clerkId: id });
 
-		if (!user) {
-			// signup
+		if (!existingUser) {
 			await User.create({
 				clerkId: id,
-				fullName: `${firstName || ""} ${lastName || ""}`.trim(),
+				fullName,
 				imageUrl,
 			});
 		}
